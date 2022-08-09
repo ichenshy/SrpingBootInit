@@ -21,7 +21,7 @@ class UserServiceTest {
     @Test
     void testAddUser() {
         User user = new User();
-        user.setUsername("dogYupi");
+        user.setUserName("dogYupi");
         user.setUserAccount("123");
         user.setAvatarUrl("");
         user.setGender(0);
@@ -36,8 +36,8 @@ class UserServiceTest {
     @Test
     void testUpdateUser() {
         User user = new User();
-        user.setId(1);
-        user.setUsername("dogYupi");
+        user.setId(1L);
+        user.setUserName("dogYupi");
         user.setUserAccount("123");
         user.setAvatarUrl("");
         user.setGender(0);
