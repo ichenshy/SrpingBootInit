@@ -17,7 +17,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 /**
  * 请求 AOP
  *
- * @author Csiro
+ * @author chenshy
  **/
 @Aspect
 @Component
