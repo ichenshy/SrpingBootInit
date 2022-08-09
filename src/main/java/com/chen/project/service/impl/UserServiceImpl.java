@@ -8,10 +8,12 @@ import com.chen.project.common.ErrorCode;
 import com.chen.project.exception.BusinessException;
 import com.chen.project.mapper.UserMapper;
 import com.chen.project.service.UserService;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -27,8 +29,6 @@ import org.springframework.util.DigestUtils;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         implements UserService {
 
-    @Resource
-    private UserMapper userMapper;
 
     /**
      * 盐值，混淆密码
@@ -59,8 +59,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         // 账户不能重复
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userAccount", userAccount);
-        long count = userMapper.selectCount(queryWrapper);
+        queryWrapper.eq("user_account", userAccount);
+        long count = baseMapper.selectCount(queryWrapper);
         if (count > 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
         }
@@ -81,31 +81,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         // 1. 校验
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            return null;
+            throw new BusinessException(ErrorCode.NULL_ERROR,"账号或密码为空");
         }
         if (userAccount.length() < 4) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号不能小于4位");
+
         }
-        if (userPassword.length() < 8) {
-            return null;
+        if (userPassword.length() < 6) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码不能小于6位");
+
         }
         // 账户不能包含特殊字符
         String validPattern = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (matcher.find()) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账户不能包含特殊字符");
         }
         // 2. 加密
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
         // 查询用户是否存在
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userAccount", userAccount);
-        queryWrapper.eq("userPassword", encryptPassword);
-        User user = userMapper.selectOne(queryWrapper);
+        queryWrapper.eq("user_account", userAccount);
+        queryWrapper.eq("user_password", encryptPassword);
+        User user = baseMapper.selectOne(queryWrapper);
         // 用户不存在
         if (user == null) {
-            log.info("user login failed, userAccount cannot match userPassword");
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"您输入的账号或密码有误");
         }
         // 3. 用户脱敏
         User safetyUser = getSafetyUser(user);
